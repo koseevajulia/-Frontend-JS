@@ -1,0 +1,67 @@
+/* Базовые стили */
+body {
+  font-family: sans-serif;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1, h2 {
+  margin-top: 0;
+}
+
+/* Стили для выбора даты */
+.date-picker {
+  margin-bottom: 20px;
+}
+
+/* Стили для списка сеансов */
+.seances ul {
+  list-style: none;
+  padding: 0;
+}
+
+.seances li {
+  margin-bottom: 10px;
+}
+
+/* Стили для схемы зала */
+.seats {
+  margin-bottom: 20px;
+}
+
+#seats-chart {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-gap: 5px;
+}
+
+.seat {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  text-align: center;
+  line-height: 30px;
+  cursor: pointer;
+}
+
+.seat.available {
+  background-color: #00FF00; /* Зеленый - доступно */
+}
+
+.seat.booked {
+  background-color: #FF0000; /* Красный - забронировано */
+}
+
+.seat.selected {
+  background-color: #FFFF00; /* Желтый - выбрано */
+}
+
+/* Стили для информации о бронировании */
+.booking-info {
+  margin-top: 20px;
+}
