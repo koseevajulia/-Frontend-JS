@@ -1,0 +1,179 @@
+const dateInput = document.getElementById('date');
+const seancesList = document.getElementById('seances-list');
+const seatsChart = document.getElementById('seats-chart');
+const selectedSeatsCount = document.getElementById('selected-seats-count');
+const totalPrice = document.getElementById('total-price');
+const bookButton = document.getElementById('book-button');
+
+// Настройки
+const pricePerSeat = 150; // Стоимость одного места
+const seanceInterval = 2; // Интервал между сеансами в часах
+
+// Функция для получения доступных дат
+function getAvailableDates() {
+  const currentDate = new Date();
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(currentDate);
+    date.setDate(currentDate.getDate() + i);
+    dates.push(date.toISOString().slice(0, 10));
+  }
+  return dates;
+}
+
+// Функция для получения доступных сеансов
+function getAvailableSeances(date) {
+  const seances = [];
+  const startTime = new Date(date).setHours(10, 0, 0, 0);
+  for (let i = 0; i < 6; i++) {
+    const seanceTime = new Date(startTime);
+    seanceTime.setHours(seanceTime.getHours() + i * seanceInterval);
+    seances.push(seanceTime);
+  }
+  return seances;
+}
+
+// Функция для отображения сеансов
+function displaySeances(seances) {
+  seancesList.innerHTML = '';
+  seances.forEach(seance => {
+    const li = document.createElement('li');
+    const seanceTime = new Date(seance);
+    li.textContent = seanceTime.toLocaleTimeString();
+    li.addEventListener('click', () => {
+      displaySeats(seance);
+    });
+    seancesList.appendChild(li);
+  });
+}
+
+// Функция для отображения схемы зала
+function displaySeats(seance) {
+  seatsChart.innerHTML = '';
+  const seats = [];
+  for (let i = 0; i < 100; i++) {
+    seats.push({
+      id: i,
+      status: 'available', // Доступно
+      selected: false
+    });
+  }
+  // Загрузка данных о бронированиях из localStorage
+  const bookedSeats = JSON.parse(localStorage.getItem(seance.toISOString().slice(0, 10)));
+  if (bookedSeats) {
+    bookedSeats.forEach(seat => {
+      seats[seat].status = 'booked';
+    });
+  }
+
+  seats.forEach(seat => {
+    const seatElement = document.createElement('div');
+    seatElement.classList.add('seat');
+    seatElement.classList.add(seat.status);
+    seatElement.textContent = seat.id + 1;
+    seatElement.addEventListener('click', () => {
+      toggleSeatSelection(seat.id);
+    });
+    seatsChart.appendChild(seatElement);
+  });
+}
+
+// Функция для изменения статуса выбранного места
+function toggleSeatSelection(seatId) {
+  const seatElement = seatsChart.children[seatId];
+  const selected = seatElement.classList.contains('selected');
+
+  if (selected) {
+    seatElement.classList.remove('selected');
+    selectedSeatsCount.textContent = parseInt(selectedSeatsCount.textContent) - 1;
+    totalPrice.textContent = parseInt(totalPrice.textContent) - pricePerSeat;
+  } else {
+    seatElement.classList.add('selected');
+    selectedSeatsCount.textContent = parseInt(selectedSeatsCount.textContent) + 1;
+    totalPrice.textContent = parseInt(totalPrice.textContent) + pricePerSeat;
+  }
+
+  // Проверка на возможность бронирования
+  if (parseInt(selectedSeatsCount.textContent) > 0) {
+    bookButton.disabled = false;
+  } else {
+    bookButton.disabled = true;
+  }
+}
+
+// Функция для бронирования билетов
+function bookTickets() {
+  // Получение данных о сеансе и выбранных местах
+  const selectedDate = dateInput.value;
+  const selectedSeance = new Date(selectedDate);
+  const selectedSeats = Array.from(seatsChart.children)
+    .filter(seat => seat.classList.contains('selected'))
+    .map(seat => parseInt(seat.textContent) - 1);
+
+  // Сохранение данных о бронировании в localStorage
+  const bookedSeats = JSON.parse(localStorage.getItem(selectedDate));
+  if (bookedSeats) {
+    bookedSeats.push(...selectedSeats);
+  } else {
+    bookedSeats = selectedSeats;
+  }
+  localStorage.setItem(selectedDate, JSON.stringify(bookedSeats));
+
+  // Очистка выбора мест и обнуление стоимости
+  Array.from(seatsChart.children)
+    .filter(seat => seat.classList.contains('selected'))
+    .forEach(seat => seat.classList.remove('selected'));
+  selectedSeatsCount.textContent = 0;
+  totalPrice.textContent = 0;
+  bookButton.disabled = true;
+
+  // Обновление схемы зала
+  displaySeats(selectedSeance);
+}
+
+// Загрузка данных из localStorage при загрузке страницы
+window.addEventListener('load', () => {
+  const storedDates = JSON.parse(localStorage.getItem('dates'));
+  if (storedDates) {
+    dateInput.value = storedDates[0];
+  } else {
+    dateInput.value = new Date().toISOString().slice(0, 10);
+  }
+  updateDateOptions();
+  displaySeances(getAvailableSeances(dateInput.value));
+});
+
+// Обновление списка дат в input type="date"
+function updateDateOptions() {
+  const availableDates = getAvailableDates();
+  const currentDate = new Date();
+  const maxDate = new Date(currentDate);
+  maxDate.setDate(currentDate.getDate() + 7);
+
+  // Сохранение дат в localStorage
+  localStorage.setItem('dates', JSON.stringify(availableDates));
+
+  // Отображение дат в input type="date"
+  dateInput.min = new Date(currentDate).toISOString().slice(0, 10);
+  dateInput.max = maxDate.toISOString().slice(0, 10);
+  dateInput.value = availableDates[0];
+
+  // Обработка изменения даты
+  dateInput.addEventListener('change', () => {
+    const selectedDate = dateInput.value;
+    const selectedDateObject = new Date(selectedDate);
+    const currentDateTime = new Date();
+
+    if (selectedDateObject < currentDateTime) {
+      displaySeances(getAvailableSeances(selectedDate));
+      // Отобразить только сеансы, прошедшие до текущего момента
+      displaySeats(selectedDateObject);
+    } else {
+      displaySeances(getAvailableSeances(selectedDate));
+      displaySeats(selectedDateObject);
+    }
+  });
+}
+
+// Обработчики событий
+bookButton.addEventListener('click', bookTickets);
