@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Кинотеатр</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Резервирование билетов</h1>
+    <div class="date-picker">
+      <label for="date">Выберите дату:</label>
+      <input type="date" id="date" value="">
+    </div>
+    <div class="seances">
+      <h2>Сеансы:</h2>
+      <ul id="seances-list"></ul>
+    </div>
+    <div class="seats">
+      <h2>Схема зала:</h2>
+      <div id="seats-chart"></div>
+    </div>
+    <div class="booking-info">
+      <p>Выбрано мест: <span id="selected-seats-count">0</span></p>
+      <p>Стоимость: <span id="total-price">0</span> руб.</p>
+      <button id="book-button" disabled>Забронировать</button>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
